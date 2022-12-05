@@ -2,6 +2,7 @@ from typing import List
 import pandas as pd
 from scipy import stats
 
+
 class KsTest:
     def __init__(self, a: pd.DataFrame, b: pd.DataFrame, p_threshold=0.005):
         self.p_threshold = p_threshold
@@ -17,7 +18,7 @@ class KsTest:
 
         return False
 
-    def exceptions_list(self) -> List:
+    def exception_feature_list(self) -> List:
         ex_list = []
         for key in self.results.keys():
             if self.results[key][1] < self.p_threshold:

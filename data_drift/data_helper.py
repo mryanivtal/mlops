@@ -28,17 +28,6 @@ def change_int_values(df: pd.DataFrame, feature_name, from_value, to_value, flip
     return df
 
 
-# Create 5x dataset with added gaussian noise
-def get_5x_dataset_with_noise(x, y, noise_features, noise_mu=0, noise_rate=0.2):
-    x_synthetic = x.append(x).append(x).append(x).append(x).reset_index(drop=True).copy()
-    y_synthetic = y.append(y).append(y).append(y).append(y).reset_index(drop=True).copy()
-
-    noise_add_feature_std = x_synthetic[noise_features].std()
-
-    for feature in noise_features:
-        x_synthetic = add_gaussian_noise_to_features(x_synthetic, [feature], noise_mu, noise_rate * noise_add_feature_std[feature])
-
-    return x_synthetic, y_synthetic
 
 
 def sample_from_data(x, y, sample_size):
