@@ -4,9 +4,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
 from data_helper import sample_from_data
-from drift_detection.chi_drift_tester import ChiDriftTester
-from drift_detection.drift_test_set import DriftTestSet
-from drift_detection.ks_drift_tester import KsDriftTester
+from drift_detection.drift_detector import DriftDetector
 from models import XgbModel
 from kpi_helper import calc_perf_kpis
 
@@ -40,20 +38,10 @@ model.fit(x_train, y_train)
 y_pred = model.predict(x_test)
 
 # Create drift test set with reference data
-drift_test_set = DriftTestSet('drift_test_set')
-P_VAL_THRESHOLD = 0.005
-for feature in x_cont_features:
-    test_name = 'ks_' + feature
-    drift_test_set.add(KsDriftTester(test_name, x_train, feature, P_VAL_THRESHOLD))
-    # todo: add also int features?
-
-P_VAL_THRESHOLD = 0.99
-for feature in x_cat_features:
-    test_name = 'chi_' + feature
-    drift_test_set.add(ChiDriftTester(test_name, x_train, feature, P_VAL_THRESHOLD))
+drift_detector = DriftDetector(x_train, x_cont_features, x_int_features, x_cat_features)
 
 # initial drift test - initial test vs train
-drift_test_results = drift_test_set.test_drift(x_test)
+drift_test_results = drift_detector.test_drift(x_test)
 
 # Calc and store initial model performance KPIs on test
 kpi = calc_perf_kpis(x_test, y_test, y_pred)
@@ -83,7 +71,7 @@ for i in range(number_of_batches):
     kpi_sample = calc_perf_kpis(x_sample, y_sample, y_pred)
 
     # Drift test - Compare to ground truth, calc error kpis
-    drift_test_results = drift_test_set.test_drift(x_sample)
+    drift_test_results = drift_detector.test_drift(x_sample)
     kpi['drift_found'] = drift_test_results['drift_found']
     kpi_sample['drift_exceptions'] = drift_test_results['data']['test_exceptions']
     perf_kpis = perf_kpis.append(kpi_sample, ignore_index=True)
