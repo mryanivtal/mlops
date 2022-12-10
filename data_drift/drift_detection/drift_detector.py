@@ -6,6 +6,8 @@ from drift_detection.abstract_drift_tester import AbstractDriftTester
 from drift_detection.drift_testers.chi_drift_tester import ChiDriftTester
 from drift_detection.drift_test_set import DriftTestSet
 from drift_detection.drift_testers.ks_drift_tester import KsDriftTester
+from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
+from drift_detection.drift_testers.pca_ks_drift_tester import PcaKsDriftTester
 
 
 class DriftDetector:
@@ -15,8 +17,7 @@ class DriftDetector:
         """
         self.drift_test_set = []
 
-    def add_default_testers(self, dataset: pd.DataFrame, cont_features: List, int_features: List, cat_features: List,
-                            p_val_threshold=0.005):
+    def add_default_testers(self, dataset: pd.DataFrame, cont_features: List, int_features: List, cat_features: List):
         """
         Add all default tests to drift detector:
         KS for continuous features,
@@ -32,12 +33,15 @@ class DriftDetector:
 
         for feature in cont_features:
             test_name = 'ks_' + feature
-            self.drift_test_set.add(KsDriftTester(test_name, dataset, feature, p_val_threshold))
+            self.add_tester(KsDriftTester(test_name, dataset, feature, 0.005))
             # todo: add also int features?
 
         for feature in cat_features:
             test_name = 'chi_' + feature
-            self.drift_test_set.add(ChiDriftTester(test_name, dataset, feature, p_val_threshold))
+            self.add_tester(ChiDriftTester(test_name, dataset, feature, 0.005))
+
+        self.add_tester(PcaKsDriftTester('pca_ks', dataset, cont_features + int_features, 0.1))
+        self.add_tester(MMDDriftTester('mmd', dataset, cont_features + int_features, 0.03))
 
     def add_tester(self, test: AbstractDriftTester):
         self.drift_test_set.add(test)
@@ -45,5 +49,3 @@ class DriftDetector:
     def test_drift(self, data: object):
         return self.drift_test_set.test_drift(data)
 
-    # todo: add custom tester setup
-    # Todo: add MMD tests, pca tests...
