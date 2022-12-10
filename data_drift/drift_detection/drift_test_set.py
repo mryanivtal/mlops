@@ -1,5 +1,6 @@
 from abc import ABC
 from drift_detection.abstract_drift_tester import AbstractDriftTester
+import pandas as pd
 
 
 class DriftTestSet(AbstractDriftTester, ABC):
@@ -10,7 +11,11 @@ class DriftTestSet(AbstractDriftTester, ABC):
     def add(self, tester: AbstractDriftTester):
         self.drift_testers.append(tester)
 
-    def test_drift(self, data: object):
+    def fit(self, ref_data: pd.DataFrame):
+        for tester in self.drift_testers:
+            tester.fit(ref_data)
+
+    def test_drift(self, data: pd.DataFrame):
         tester_results_list = []
         drift_test_exceptions = []
         drift_found = False

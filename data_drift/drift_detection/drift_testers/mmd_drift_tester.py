@@ -9,19 +9,25 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class MMDDriftTester(AbstractDriftTester, ABC):
-    def __init__(self, test_name: str, ref_data: pd.DataFrame, col_names: List[str], dist_threshold: float):
-        self.ref_data = ref_data
-        self.temp_data_storage = ref_data.copy()
-        self.ref_data_size = len(ref_data)
+    def __init__(self, test_name: str, col_names: List[str], dist_threshold: float):
+        self.ref_data = None
+        self.temp_data_storage = None
+        self.ref_data_size = 0
         self.dist_threshold = dist_threshold
         self.col_names = col_names
         self.test_name = test_name
+        self.is_fit = False
 
+    def fit(self, ref_data: pd.DataFrame):
+        self.ref_data = ref_data
+        self.temp_data_storage = ref_data.copy()
+        self.ref_data_size = len(ref_data)
+        self.is_fit = True
 
     def test_drift(self, data: pd.DataFrame) -> Dict:
         # need exact same data size between reference and current test
         self.temp_data_storage = self.temp_data_storage.append(data)
-        self.temp_data_storage = self.temp_data_storage[len(self.temp_data_storage) - self.ref_data_size :]
+        self.temp_data_storage = self.temp_data_storage[len(self.temp_data_storage) - self.ref_data_size:]
 
         results = {}
         results['test_name'] = self.test_name

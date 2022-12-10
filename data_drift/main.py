@@ -43,7 +43,8 @@ y_pred = model.predict(x_test)
 
 # Create drift detector with all default testers
 drift_detector = DriftDetector()
-drift_detector.add_default_testers(x_train, x_cont_features, x_int_features, x_cat_features)
+drift_detector.add_default_testers(x_cont_features, x_int_features, x_cat_features)
+drift_detector.fit(x_train)
 
 # initial drift test - initial test vs train
 drift_test_results = drift_detector.test_drift(x_test)

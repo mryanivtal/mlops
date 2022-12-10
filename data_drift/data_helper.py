@@ -32,7 +32,6 @@ def sample_from_data(x, y, sample_size):
     sample_indexes = np.random.choice(range(len(x)), size=sample_size, replace=False)
     x_sample = x.iloc[sample_indexes, :].copy()
     y_sample = y.iloc[sample_indexes].copy()
-
     return x_sample, y_sample
 
 
