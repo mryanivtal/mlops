@@ -37,3 +37,6 @@ class DriftTestSet(AbstractDriftTester, ABC):
         }
         return results
 
+    def get_test_names(self):
+        return [test.test_name for test in self.drift_testers]
+

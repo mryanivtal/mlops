@@ -1,8 +1,9 @@
 from typing import List
 
 import numpy as np
+from matplotlib.pyplot import get_cmap
 from sklearn.model_selection import train_test_split
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, cm, cycler
 import pandas as pd
 from boston_ds import BostonDS
 from data_helper import sample_from_data
@@ -51,8 +52,8 @@ drift_test_results = drift_detector.test_drift(x_test)
 
 # Calc and store initial model performance KPIs on test
 kpi = calc_perf_kpis(x_test, y_test, y_pred)
-kpi['drift_found'] = drift_test_results['drift_found']
-kpi['drift_exceptions'] = drift_test_results['data']['test_exceptions']
+kpi['drift_detected'] = drift_test_results['drift_detected']
+kpi['test_exceptions'] = drift_test_results['test_exceptions']
 
 perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 
@@ -76,39 +77,26 @@ for i in range(number_of_batches):
     # calc RMSE (For demo only, cannot do in real runtime - no labels there
     kpi_sample = calc_perf_kpis(x_sample, y_sample, y_pred)
 
-    # Drift test - Compare to ground truth, calc error kpis
+    # Drift test
     drift_test_results = drift_detector.test_drift(x_sample)
-    kpi_sample['drift_found'] = drift_test_results['drift_found']
-    kpi_sample['drift_exceptions'] = drift_test_results['data']['test_exceptions']
+    kpi_sample['drift_detected'] = drift_test_results['drift_detected']
+    kpi_sample['test_exceptions'] = drift_test_results['test_exceptions']
     perf_kpis = perf_kpis.append(kpi_sample, ignore_index=True)
 
-
-# Find the first iteration where the feature changed twice in a row (to make sure chanage is consistent)
-perf_kpis['RM_change'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'ks_RM', 2)
-perf_kpis['LSTAT_change'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'ks_LSTAT', 2)
-perf_kpis['pca_changed'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'pca_ks', 1)
-perf_kpis['mmd_changed'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'mmd', 3)
-
-
 # Plot
+history = drift_detector.history_df
+
 fig, axs = plt.subplots(figsize=(12, 12))
 axs.plot(perf_kpis['RMSE'])
 
-if perf_kpis['RM_change'].sum() > 0:
-    first_rm = np.where(perf_kpis['RM_change'] == True)[0].min()
-    axs.axvline(x=first_rm, color='r', label='RM_KS')
+# draw all drift detections on the plot - first detection point for each
+fail_detections = []
+cmap = get_cmap('hsv', 15)
 
-if perf_kpis['LSTAT_change'].sum() > 0:
-    first_lstat = np.where(perf_kpis['LSTAT_change'] == True)[0].min()
-    axs.axvline(x=first_lstat, color='g', label='LSTAT_KS')
-
-if perf_kpis['pca_changed'].sum() > 0:
-    first_pca = np.where(perf_kpis['pca_changed'] == True)[0].min()
-    axs.axvline(x=first_pca, color='b', label='PCA_KS')
-
-if perf_kpis['mmd_changed'].sum() > 0:
-    first_mmd = np.where(perf_kpis['mmd_changed'] == True)[0].min()
-    axs.axvline(x=first_mmd, color='y', label='MMD')
+for i, test_name in enumerate(drift_detector.get_test_names()):
+    if history[test_name].sum() > 0:
+        detection_time = np.where(history[test_name] == True)[0].min()
+        axs.axvline(x=detection_time, label=test_name, color=cmap(i))
 
 axs.legend()
 plt.show()

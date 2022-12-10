@@ -2,7 +2,11 @@ import pandas as pd
 
 
 class AbstractDriftTester:
-    def test_drift(self, data: object):
+    def __init__(self):
+        self.test_name = None
+        self.is_fit = False
+
+    def test_drift(self, data: pd.DataFrame):
         raise NotImplementedError
 
     def fit(self, ref_data: pd.DataFrame):
