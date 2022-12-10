@@ -28,8 +28,6 @@ def change_int_values(df: pd.DataFrame, feature_name, from_value, to_value, flip
     return df
 
 
-
-
 def sample_from_data(x, y, sample_size):
     sample_indexes = np.random.choice(range(len(x)), size=sample_size, replace=False)
     x_sample = x.iloc[sample_indexes, :].copy()

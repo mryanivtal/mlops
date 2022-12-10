@@ -13,9 +13,9 @@ class KsDriftTester(AbstractDriftTester, ABC):
         self.col_name = col_name
         self.test_name = test_name
 
-    def test_drift(self, x: np.array) -> Dict:
+    def test_drift(self, data: pd.DataFrame) -> Dict:
         results = {}
         results['test_name'] = self.test_name
-        results['data'] = stats.kstest(x[self.col_name], self.ref_data[self.col_name])
+        results['data'] = stats.kstest(data[self.col_name], self.ref_data[self.col_name])
         results['drift_found'] = results['data'][1] < self.p_threshold
         return results

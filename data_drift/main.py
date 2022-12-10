@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
@@ -5,8 +7,10 @@ import pandas as pd
 from boston_ds import BostonDS
 from data_helper import sample_from_data
 from drift_detection.drift_detector import DriftDetector
+from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
+from drift_detection.drift_testers.pca_ks_drift_tester import PcaKsDriftTester
 from models import XgbModel
-from kpi_helper import calc_perf_kpis
+from utils import calc_perf_kpis, recurring_val_in_lists
 
 # ============================================================= Initial data setup
 # Load and prep boston data
@@ -37,8 +41,11 @@ model.fit(x_train, y_train)
 # predict y on test data
 y_pred = model.predict(x_test)
 
-# Create drift test set with reference data
-drift_detector = DriftDetector(x_train, x_cont_features, x_int_features, x_cat_features)
+# Create drift detector with all default testers
+drift_detector = DriftDetector()
+drift_detector.add_default_testers(x_train, x_cont_features, x_int_features, x_cat_features, p_val_threshold=0.005)
+drift_detector.add_tester(PcaKsDriftTester('pca_ks', x_test, x_cont_features + x_int_features, 0.1))
+drift_detector.add_tester(MMDDriftTester('mmd', x_test, x_cont_features + x_int_features, 0.03))
 
 # initial drift test - initial test vs train
 drift_test_results = drift_detector.test_drift(x_test)
@@ -72,24 +79,39 @@ for i in range(number_of_batches):
 
     # Drift test - Compare to ground truth, calc error kpis
     drift_test_results = drift_detector.test_drift(x_sample)
-    kpi['drift_found'] = drift_test_results['drift_found']
+    kpi_sample['drift_found'] = drift_test_results['drift_found']
     kpi_sample['drift_exceptions'] = drift_test_results['data']['test_exceptions']
     perf_kpis = perf_kpis.append(kpi_sample, ignore_index=True)
 
-# todo: need to move this to production like step within the loop and retrain where needed
-# Find the first iteration where the feature changed twice in a row (to make sure chanage is consistent)
-perf_kpis['RM_change'] = perf_kpis['drift_exceptions'].apply(lambda row: 'ks_RM' in row).rolling(2).aggregate(sum) == 2
-first_rm = np.where(perf_kpis['RM_change'] == True)[0].min()
 
-perf_kpis['LSTAT_change'] = perf_kpis['drift_exceptions'].apply(lambda row: 'ks_LSTAT' in row).rolling(2).aggregate(
-    sum) == 2
-first_lstat = np.where(perf_kpis['LSTAT_change'] == True)[0].min()
+# Find the first iteration where the feature changed twice in a row (to make sure chanage is consistent)
+perf_kpis['RM_change'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'ks_RM', 2)
+perf_kpis['LSTAT_change'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'ks_LSTAT', 2)
+perf_kpis['pca_changed'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'pca_ks', 1)
+perf_kpis['mmd_changed'] = recurring_val_in_lists(perf_kpis['drift_exceptions'], 'mmd', 3)
+
 
 # Plot
 fig, axs = plt.subplots(figsize=(12, 12))
 axs.plot(perf_kpis['RMSE'])
-axs.axvline(x=first_rm, color='r')
-axs.axvline(x=first_lstat, color='g')
+
+if perf_kpis['RM_change'].sum() > 0:
+    first_rm = np.where(perf_kpis['RM_change'] == True)[0].min()
+    axs.axvline(x=first_rm, color='r', label='RM_KS')
+
+if perf_kpis['LSTAT_change'].sum() > 0:
+    first_lstat = np.where(perf_kpis['LSTAT_change'] == True)[0].min()
+    axs.axvline(x=first_lstat, color='g', label='LSTAT_KS')
+
+if perf_kpis['pca_changed'].sum() > 0:
+    first_pca = np.where(perf_kpis['pca_changed'] == True)[0].min()
+    axs.axvline(x=first_pca, color='b', label='PCA_KS')
+
+if perf_kpis['mmd_changed'].sum() > 0:
+    first_mmd = np.where(perf_kpis['mmd_changed'] == True)[0].min()
+    axs.axvline(x=first_mmd, color='y', label='MMD')
+
+axs.legend()
 plt.show()
 
 print('Perf KPIs:', perf_kpis)
