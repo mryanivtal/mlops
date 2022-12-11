@@ -59,17 +59,20 @@ perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 
 # mmd_results = MMD_pd(X_train, X_test)
 # ============================================================= Runtime step
-number_of_batches = 250
+number_of_batches = 300
+start_drift_at_batch = 120
 sample_size = 50
+
 
 # Runtime loop
 for i in range(number_of_batches):
     # Sample batch from data
     x_sample, y_sample = sample_from_data(x, y, sample_size)
 
-    # modify data with trend (feature drift)
-    x_sample['RM'] = x_sample['RM'] + x['RM'].mean() * 0.005 * i
-    x_sample['LSTAT'] = x_sample['LSTAT'] + x['LSTAT'].mean() * 0.005 * i
+    if i > start_drift_at_batch:
+        # modify data with trend (feature drift)
+        x_sample['RM'] = x_sample['RM'] + x['RM'].std() * 0.01 * (i - start_drift_at_batch)
+        x_sample['LSTAT'] = x_sample['LSTAT'] + x['LSTAT'].std() * 0.01 * (i - start_drift_at_batch)
 
     # predict
     y_pred = model.predict(x_sample)
@@ -92,6 +95,8 @@ axs.plot(perf_kpis['RMSE'])
 # draw all drift detections on the plot - first detection point for each
 fail_detections = []
 cmap = get_cmap('hsv', 15)
+
+axs.axvline(x=start_drift_at_batch, label='drift_start', color='r', linestyle='dashed')
 
 for i, test_name in enumerate(drift_detector.get_test_names()):
     if history[test_name].sum() > 0:
