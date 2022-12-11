@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import numpy as np
 
-from data_helper import change_int_values
+from helpers.data_helper import change_int_values
 from drift_detection.drift_testers.chi_drift_tester import ChiDriftTester
 
 

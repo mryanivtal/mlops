@@ -2,7 +2,7 @@ from abc import ABC
 from typing import List, Dict
 import pandas as pd
 import torch
-from drift_detection.abstract_drift_tester import AbstractDriftTester
+from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

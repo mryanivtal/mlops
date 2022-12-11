@@ -1,17 +1,13 @@
-from typing import List
-
 import numpy as np
 from matplotlib.pyplot import get_cmap
 from sklearn.model_selection import train_test_split
-from matplotlib import pyplot as plt, cm, cycler
+from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
-from data_helper import sample_from_data
+from helpers.data_helper import sample_from_data
 from drift_detection.drift_detector import DriftDetector
-from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
-from drift_detection.drift_testers.pca_ks_drift_tester import PcaKsDriftTester
-from models import XgbModel
-from utils import calc_perf_kpis, recurring_val_in_lists
+from helpers.model_helper import XgbModel
+from helpers.utils import calc_perf_kpis
 
 # ============================================================= Initial data setup
 # Load and prep boston data

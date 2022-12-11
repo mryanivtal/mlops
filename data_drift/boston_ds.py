@@ -2,7 +2,7 @@ import warnings
 from sklearn.datasets import load_boston
 import pandas as pd
 
-from data_helper import add_gaussian_noise_to_features
+from helpers.data_helper import add_gaussian_noise_to_features
 
 warnings.filterwarnings(action='ignore', category=FutureWarning)
 

@@ -4,7 +4,7 @@ from scipy import stats
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from drift_detection.abstract_drift_tester import AbstractDriftTester
+from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
 
 
 class PcaKsDriftTester(AbstractDriftTester, ABC):

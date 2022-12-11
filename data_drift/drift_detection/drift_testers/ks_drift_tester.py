@@ -1,8 +1,8 @@
 from abc import ABC
-from typing import List, Dict
+from typing import Dict
 from scipy import stats
 import pandas as pd
-from drift_detection.abstract_drift_tester import AbstractDriftTester
+from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
 
 
 class KsDriftTester(AbstractDriftTester, ABC):

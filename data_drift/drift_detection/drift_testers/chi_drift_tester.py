@@ -3,7 +3,7 @@ from typing import Dict
 from scipy.stats import chi2_contingency
 import numpy as np
 import pandas as pd
-from drift_detection.abstract_drift_tester import AbstractDriftTester
+from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
 
 
 class ChiDriftTester(AbstractDriftTester, ABC):

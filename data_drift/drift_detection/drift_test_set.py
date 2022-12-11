@@ -1,5 +1,5 @@
 from abc import ABC
-from drift_detection.abstract_drift_tester import AbstractDriftTester
+from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
 import pandas as pd
 
 
