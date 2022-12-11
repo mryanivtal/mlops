@@ -13,8 +13,6 @@ from helpers.utils import calc_perf_kpis
 # Load and prep boston data
 
 # Get model data
-# todo: generalize the dataset class,
-# todo: get type of target (Regression / classification, maybe metadata - values / range)
 boston = BostonDS()
 
 x = boston.x
@@ -30,7 +28,6 @@ x_train, x_test, y_train, y_test = train_test_split(x_sample, y_sample, test_siz
 
 # ============================================================= Train step
 
-# todo: split this step to overall train and save references function
 # Build model on train data
 model = XgbModel()
 model.fit(x_train, y_train)
@@ -53,8 +50,8 @@ kpi['test_exceptions'] = drift_test_results['test_exceptions']
 
 perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 
-# mmd_results = MMD_pd(X_train, X_test)
 # ============================================================= Runtime step
+
 number_of_batches = 300
 start_drift_at_batch = 100
 sample_size = 50
@@ -62,11 +59,11 @@ sample_size = 50
 
 # Runtime loop
 for i in range(number_of_batches):
-    # Sample batch from data
+    # Sample batch from data (No drift yet)
     x_sample, y_sample = sample_from_data(x, y, sample_size)
 
+    # modify data batch to create feature drift
     if i > start_drift_at_batch:
-        # modify data with trend (feature drift)
         x_sample['RM'] = x_sample['RM'] + x['RM'].std() * 0.01 * (i - start_drift_at_batch)
         x_sample['LSTAT'] = x_sample['LSTAT'] + x['LSTAT'].std() * 0.01 * (i - start_drift_at_batch)
 
@@ -76,29 +73,35 @@ for i in range(number_of_batches):
     # calc RMSE (For demo only, cannot do in real runtime - no labels there
     kpi_sample = calc_perf_kpis(x_sample, y_sample, y_pred)
 
-    # Drift test
+    # Execute drift test
     drift_test_results = drift_detector.test_drift(x_sample)
     kpi_sample['drift_detected'] = drift_test_results['drift_detected']
     kpi_sample['test_exceptions'] = drift_test_results['test_exceptions']
     perf_kpis = perf_kpis.append(kpi_sample, ignore_index=True)
 
-# Plot
-history = drift_detector.history_df
+# ========================================================================== Plot
 
 fig, axs = plt.subplots(figsize=(12, 12))
+
+# plot RMSE (Loss function) line
 axs.plot(perf_kpis['RMSE'])
 
-# draw all drift detections on the plot - first detection point for each
+# plot vertical lin for data drift start point
+axs.axvline(x=start_drift_at_batch, label='drift_start', color='r', linestyle='dashed')
+
+# Get drift detector history for plots
+history = drift_detector.history_df
+
+# plot vertical line for each tester that fired
 fail_detections = []
 cmap = get_cmap('hsv', 15)
-
-axs.axvline(x=start_drift_at_batch, label='drift_start', color='r', linestyle='dashed')
 
 for i, test_name in enumerate(drift_detector.get_test_names()):
     if history[test_name].sum() > 0:
         detection_time = np.where(history[test_name] == True)[0].min()
         axs.axvline(x=detection_time, label=test_name, color=cmap(i))
 
+# Display plot
 axs.legend()
 plt.show()
 

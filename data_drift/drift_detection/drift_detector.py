@@ -46,7 +46,6 @@ class DriftDetector:
         # PCA is crap, probably because the data is not scaled.
         # self.add_tester(PcaKsDriftTester('pca_ks', cont_features + int_features, 0.1))
 
-
     def add_tester(self, test: AbstractDriftTester, consecutive_fails=3):
         self.drift_test_set.add(test)
         self.test_consecutive_fails[test.test_name] = consecutive_fails
