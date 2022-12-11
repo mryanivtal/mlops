@@ -1,7 +1,6 @@
 from abc import ABC
 from typing import List, Dict
 from scipy import stats
-import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 
@@ -24,7 +23,6 @@ class PcaKsDriftTester(AbstractDriftTester, ABC):
         self.pca = PCA(n_components=1)
         self.ref_data_pca = self.pca.fit_transform(ref_data[self.col_names]).squeeze()
         self.is_fit = True
-
 
     def test_drift(self, data: pd.DataFrame) -> Dict:
         if not self.is_fit:

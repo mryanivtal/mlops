@@ -1,7 +1,6 @@
 from abc import ABC
 from typing import List, Dict
 from scipy import stats
-import numpy as np
 import pandas as pd
 from drift_detection.abstract_drift_tester import AbstractDriftTester
 
@@ -17,7 +16,6 @@ class KsDriftTester(AbstractDriftTester, ABC):
     def fit(self, ref_data: pd.DataFrame):
         self.ref_data = ref_data
         self.is_fit = True
-
 
     def test_drift(self, data: pd.DataFrame) -> Dict:
         if not self.is_fit:

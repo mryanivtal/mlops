@@ -1,6 +1,5 @@
 from abc import ABC
 from typing import List, Dict
-import numpy as np
 import pandas as pd
 import torch
 from drift_detection.abstract_drift_tester import AbstractDriftTester
@@ -78,8 +77,6 @@ class MMDDriftTester(AbstractDriftTester, ABC):
     def _mmd_pd(self, a, b, kernel='multiscale'):
         anp = a.to_numpy().astype('float64')
         bnp = b.to_numpy().astype('float64')
-
         t1 = torch.from_numpy(anp)
         t2 = torch.from_numpy(bnp)
-
         return self._mmd(t1, t2, kernel)
