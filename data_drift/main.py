@@ -5,9 +5,10 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
 from helpers.data_helper import sample_from_data
-from drift_detection.drift_detector import DriftDetector
 from helpers.model_helper import XgbModel
 from helpers.utils import calc_perf_kpis
+
+from drift_detection.drift_detector import DriftDetector
 
 # ============================================================= Initial data setup
 # Load and prep boston data
