@@ -60,7 +60,7 @@ perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 # mmd_results = MMD_pd(X_train, X_test)
 # ============================================================= Runtime step
 number_of_batches = 300
-start_drift_at_batch = 120
+start_drift_at_batch = 100
 sample_size = 50
 
 

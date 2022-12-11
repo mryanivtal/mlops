@@ -42,8 +42,11 @@ class DriftDetector:
             test_name = 'chi_' + feature
             self.add_tester(ChiDriftTester(test_name, feature, 0.005))
 
-        self.add_tester(PcaKsDriftTester('pca_ks', cont_features + int_features, 0.1))
         self.add_tester(MMDDriftTester('mmd', cont_features + int_features, 0.03))
+
+        # PCA is crap, probably because the data is not scaled.
+        # self.add_tester(PcaKsDriftTester('pca_ks', cont_features + int_features, 0.1))
+
 
     def add_tester(self, test: AbstractDriftTester, consecutive_fails=3):
         self.drift_test_set.add(test)
