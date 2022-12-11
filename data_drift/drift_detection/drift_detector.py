@@ -32,10 +32,9 @@ class DriftDetector:
         """
         self.drift_test_set = DriftTestSet('drift_test_set')
 
-        for feature in cont_features:
+        for feature in cont_features + int_features:
             test_name = 'ks_' + feature
             self.add_tester(KsDriftTester(test_name, feature, 0.005))
-            # todo: add also int features?
 
         for feature in cat_features:
             test_name = 'chi_' + feature
@@ -74,8 +73,9 @@ class DriftDetector:
 
     def _update_history(self, result):
         self.single_iteration_history.append(result)
-        df_dict = {'drift_detected': result['drift_found'],
+        df_dict = {'drift_detected': False,
                    'test_exceptions': result['data']['test_exceptions']}
+
         for test_name in self.drift_test_set.get_test_names():
             # single batch fail indication
             df_dict[test_name + '_iter_fail'] = True if test_name in df_dict['test_exceptions'] else False
@@ -84,7 +84,11 @@ class DriftDetector:
             test_prev_cons_fails = 0 if len(self.history_df) == 0 else self.history_df.iloc[-1][test_name + '_cons_fails']
             df_dict[test_name + '_cons_fails'] = test_prev_cons_fails + df_dict[test_name + '_iter_fail'] if df_dict[test_name + '_iter_fail'] else 0
 
-            # bottom line for tester rule
-            df_dict[test_name] = True if df_dict[test_name + '_cons_fails'] >= self.test_consecutive_fails[test_name] else False
+            # bottom line for tester rule and overall
+            if df_dict[test_name + '_cons_fails'] >= self.test_consecutive_fails[test_name]:
+                df_dict[test_name] = True
+                df_dict['drift_detected'] = True
+            else:
+                df_dict[test_name] = False
 
         self.history_df = self.history_df.append(df_dict, ignore_index=True)

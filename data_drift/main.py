@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
+from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
 from helpers.data_helper import sample_from_data
 from helpers.model_helper import XgbModel
 from helpers.utils import calc_perf_kpis
@@ -12,8 +13,6 @@ from drift_detection.drift_detector import DriftDetector
 
 # ============================================================= Initial data setup
 # Load and prep boston data
-
-# Get model data
 boston = BostonDS()
 
 x = boston.x
@@ -39,6 +38,10 @@ y_pred = model.predict(x_test)
 # Create drift detector with all default testers
 drift_detector = DriftDetector()
 drift_detector.add_default_testers(x_cont_features, x_int_features, x_cat_features)
+
+# Also possible to add specific testers manually like this:
+# drift_detector.add_tester(MMDDriftTester('mmd', x_cont_features + x_int_features, 0.03))
+
 drift_detector.fit(x_train)
 
 # initial drift test - initial test vs train
