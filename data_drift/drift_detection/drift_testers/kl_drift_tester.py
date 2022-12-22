@@ -50,11 +50,15 @@ class KLDDriftTester(AbstractDriftTester, ABC):
         return results
 
 
-    def _tune_threshold(self, data: pd.DataFrame) -> float:
+    def _tune_threshold(self, data: pd.DataFrame, n_splits=5) -> float:
+        """
+        Runs [n_splits=5] iterations of split data -> calculate kl_div, then defines threshold as avg. + 3 sigmas.
+        :param data: pandas
+        :return: distance threshold
+        """
         if len(data) < 50:
             raise Exception('Data is too small for threshold auto-tune)')
 
-        n_splits = 5
         dist_vals = []
 
         for split in range(n_splits):
@@ -67,7 +71,7 @@ class KLDDriftTester(AbstractDriftTester, ABC):
 
             train_idx, test_idx = np.split(shuffled_data.index.to_numpy(), 2)
 
-            dist = KLdivergence(shuffled_data.iloc[train_idx, :], shuffled_data.iloc[test_idx, :])
+            dist = KLdivergence(shuffled_data.iloc[train_idx, :][self.col_names], shuffled_data.iloc[test_idx, :][self.col_names])
             dist_vals.append(dist)
 
         dist_vals = np.array(dist_vals)
