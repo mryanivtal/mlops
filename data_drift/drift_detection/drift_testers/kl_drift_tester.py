@@ -3,7 +3,6 @@ from typing import List, Dict
 import pandas as pd
 import torch
 from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
-import sklearn
 import numpy as np
 
 from drift_detection.drift_testers.kl_divergence_estimate import KLdivergence
@@ -67,7 +66,7 @@ class KLDDriftTester(AbstractDriftTester, ABC):
             if len(shuffled_data) % 2 > 0:
                 shuffled_data = shuffled_data.iloc[:-1, :]
 
-            shuffled_data = shuffled_data.reset_index()
+            shuffled_data = shuffled_data.reset_index(drop=True)
 
             train_idx, test_idx = np.split(shuffled_data.index.to_numpy(), 2)
 

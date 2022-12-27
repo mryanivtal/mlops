@@ -13,7 +13,7 @@ class DriftDetector:
         """
         Creates an empty drift detector object
         """
-        self.drift_test_set = None
+        self.drift_test_set = DriftTestSet('drift_test_set')
         self.single_iteration_history = None
         self.history_df = None
         self.test_consecutive_fails = {}
@@ -31,8 +31,6 @@ class DriftDetector:
         :param cat_features: column names of categorical features
         :param p_val_threshold: p value threshold for all unit_tests
         """
-        self.drift_test_set = DriftTestSet('drift_test_set')
-
         for feature in cont_features + int_features:
             test_name = 'ks_' + feature
             self.add_tester(KsDriftTester(test_name, feature, 0.005))

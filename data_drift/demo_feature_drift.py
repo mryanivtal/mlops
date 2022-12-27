@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
-from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
+from drift_detection.drift_testers.ks_drift_tester import KsDriftTester
 from helpers.data_helper import sample_from_data
 from helpers.model_helper import XgbModel
 from helpers.utils import calc_perf_kpis
@@ -35,22 +35,24 @@ model.fit(x_train, y_train)
 # predict y on test data
 y_pred = model.predict(x_test)
 
-# Create drift detector with all default testers
-drift_detector = DriftDetector()
-drift_detector.add_default_testers(x_cont_features, x_int_features, x_cat_features)
+# Create Feature drift detector with all default testers
+x_drift_detector = DriftDetector()
+x_drift_detector.add_default_testers(x_cont_features, x_int_features, x_cat_features)
 
-# Also possible to add specific testers manually like this:
-# drift_detector.add_tester(MMDDriftTester('mmd', x_cont_features + x_int_features, 0.03))
+# create Concept drift detector with KL divergence
+y_drift_detector = DriftDetector()
+y_drift_detector.add_tester(KsDriftTester('concept_ks', 'y', 0.005))
 
-drift_detector.fit(x_train)
+x_drift_detector.fit(x_train)
+y_drift_detector.fit(pd.DataFrame(y_pred, columns=['y']))
 
 # initial drift test - initial test vs train
-drift_test_results = drift_detector.test_drift(x_test)
+x_drift_test_results = x_drift_detector.test_drift(x_test)
 
 # Calc and store initial model performance KPIs on test
 kpi = calc_perf_kpis(x_test, y_test, y_pred)
-kpi['drift_detected'] = drift_test_results['drift_detected']
-kpi['test_exceptions'] = drift_test_results['test_exceptions']
+kpi['drift_detected'] = x_drift_test_results['drift_detected']
+kpi['test_exceptions'] = x_drift_test_results['test_exceptions']
 
 perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 
@@ -78,9 +80,11 @@ for i in range(number_of_batches):
     kpi_sample = calc_perf_kpis(x_sample, y_sample, y_pred)
 
     # Execute drift test
-    drift_test_results = drift_detector.test_drift(x_sample)
-    kpi_sample['drift_detected'] = drift_test_results['drift_detected']
-    kpi_sample['test_exceptions'] = drift_test_results['test_exceptions']
+    x_drift_test_results = x_drift_detector.test_drift(x_sample)
+    y_drift_test_results = y_drift_detector.test_drift(pd.DataFrame(y_pred, columns=['y']))
+
+    kpi_sample['drift_detected'] = x_drift_test_results['drift_detected'] & y_drift_test_results['drift_detected']
+    kpi_sample['test_exceptions'] = x_drift_test_results['test_exceptions'] + y_drift_test_results['test_exceptions']
     perf_kpis = perf_kpis.append(kpi_sample, ignore_index=True)
 
 # ========================================================================== Plot
@@ -93,16 +97,22 @@ axs.plot(perf_kpis['RMSE'])
 # plot vertical lin for data drift start point
 axs.axvline(x=start_drift_at_batch, label='drift_start', color='r', linestyle='dashed')
 
-# Get drift detector history for plots
-history = drift_detector.history_df
+# Get drift detector x_history for plots
+x_history = x_drift_detector.history_df
+y_history = y_drift_detector.history_df
 
 # plot vertical line for each tester that fired
 fail_detections = []
 cmap = get_cmap('hsv', 15)
 
-for i, test_name in enumerate(drift_detector.get_test_names()):
-    if history[test_name].sum() > 0:
-        detection_time = np.where(history[test_name] == True)[0].min()
+for i, test_name in enumerate(x_drift_detector.get_test_names()):
+    if x_history[test_name].sum() > 0:
+        detection_time = np.where(x_history[test_name] == True)[0].min()
+        axs.axvline(x=detection_time, label=test_name, color=cmap(i))
+
+for i, test_name in enumerate(y_drift_detector.get_test_names()):
+    if y_history[test_name].sum() > 0:
+        detection_time = np.where(y_history[test_name] == True)[0].min()
         axs.axvline(x=detection_time, label=test_name, color=cmap(i))
 
 # Display plot
