@@ -18,12 +18,12 @@ class DriftDetector:
         self.history_df = None
         self.test_consecutive_fails = {}
 
-    def add_default_testers(self, cont_features: List, int_features: List, cat_features: List):
+    def autoselect_testers(self, cont_features: List, int_features: List, cat_features: List):
         """
         Add all default unit_tests to drift detector:
         KS for continuous features,
         Chi2 for categorical,
-        todo: int2 currently not tested
+        KL_Drvergence for multivariate
 
         :param dataset: Pandas dataframe
         :param cont_features: column names of continuous features
