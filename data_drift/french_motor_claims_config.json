@@ -1,0 +1,8 @@
+{
+	"dataset_name": "French Motor Claims",
+	"dataset_csv_path": "datasets/motor_claims.csv",
+	"cat_features": [],
+	"int_features": ["VehPower"],
+	"cont_features": ["IDpol", "Exposure", "VehAge", "DrivAge","BonusMalus", "Density", "LogDensity"],
+	"target_label": "ClaimNb"
+}
