@@ -31,8 +31,8 @@ class BostonDS:
         self.x = x.convert_dtypes()
         self.y = y.convert_dtypes()
 
-        self.cat_features = []
-        self.int_features = ['CHAS', 'RAD', 'TAX']
+        self.cat_features = ['CHAS']
+        self.int_features = ['RAD', 'TAX']
         self.cont_features = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'PTRATIO', 'B', 'LSTAT']
 
     # Create 5x dataset with added gaussian noise

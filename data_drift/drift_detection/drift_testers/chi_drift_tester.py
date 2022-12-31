@@ -24,9 +24,22 @@ class ChiDriftTester(AbstractDriftTester, ABC):
 
         results = {}
         results['test_name'] = self.test_name
-        results['data'] = chi2_contingency([x[self.col_name].value_counts(), self.ref_data[self.col_name].value_counts()])
+
+        # Make sure both histograms have the same keys
+        x_hist = x[self.col_name].value_counts()
+        ref_hist = self.ref_data[self.col_name].value_counts()
+        unique_keys = set(x_hist.index.to_list() + ref_hist.index.to_list())
+
+        for key in unique_keys:
+            if not key in x_hist.index.to_list():
+                x_hist = x_hist.append(pd.Series({key: 0}, index=[key]))
+            if not key in ref_hist.index.to_list():
+                ref_hist = ref_hist.append(pd.Series({key: 0}, index=[key]))
+
+        results['data'] = chi2_contingency([x_hist, ref_hist])
         results['drift_found'] = results['data'][1] < self.p_threshold
         return results
+
 
 
 

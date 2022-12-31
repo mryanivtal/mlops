@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
 from drift_detection.drift_testers.ks_drift_tester import KsDriftTester
-from helpers.data_helper import sample_from_data
+from helpers.data_helper import sample_from_data, change_int_values
 from helpers.model_helper import XgbModel
 from helpers.utils import calc_perf_kpis
 
@@ -66,6 +66,7 @@ for i in range(number_of_batches):
     if i > start_drift_at_batch:
         x_sample['RM'] = x_sample['RM'] + x['RM'].std() * 0.01 * (i - start_drift_at_batch)
         x_sample['LSTAT'] = x_sample['LSTAT'] + x['LSTAT'].std() * 0.01 * (i - start_drift_at_batch)
+        x_sample = change_int_values(x_sample, 'CHAS', 0, 1, 0.01 * (i - start_drift_at_batch))
 
     # predict
     y_pred = model.predict(x_sample)

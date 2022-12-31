@@ -20,9 +20,15 @@ def add_gaussian_noise_to_features(df: pd.DataFrame, feature_names: List, noise_
 
 def change_int_values(df: pd.DataFrame, feature_name, from_value, to_value, flip_rate) -> pd.DataFrame:
     df = df.copy()
+    flip_rate = min(flip_rate, 1)
 
     rows_with_from_values = df.index[df[feature_name] == from_value].tolist()
-    amount_to_flip = int(flip_rate * len(rows_with_from_values))
+    amount_to_flip = int(np.floor(flip_rate * len(rows_with_from_values)))
+
+
+    if rows_with_from_values == 0 or amount_to_flip == 0:
+        return df
+
     rows_to_flip = np.random.choice(rows_with_from_values, amount_to_flip, replace=False)
     df.loc[rows_to_flip, feature_name] = to_value
     return df
