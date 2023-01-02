@@ -69,9 +69,22 @@ def init_result_dfs(X_test,y_test,model,drift_detector):
 
 
 def add_artificial_noise_to_data(X,X_sample,current_batch,columns_to_modify=[],
-                                 x_cat_features=[],start_drift_at_batch=100,noise_factor=0.01):
+                                 x_cat_features=[],start_drift_at_batch=100,noise_factor=0.01,
+                                 numeric_noise_factor=1.5):
   '''
   Adds some noise to the data for simulating feature drift
+  Input:
+    - X - the entire train dataset
+    - X_sample - a small sample used for inference
+    - current_batch - the current batch index
+    - columns_to_modify - list of columns to apply noise on 
+    - x_cat_features - list of categorical features
+    - start_drift_at_batch - index of first drift start
+    - noise_factor - categorical features noise factor
+    - numeric_noise_factor - numeric features noise factor
+    
+    Returns:
+    - The X_sample dataset with noise
   '''
   # modify data batch to create feature drift
   for c in columns_to_modify:
@@ -82,7 +95,7 @@ def add_artificial_noise_to_data(X,X_sample,current_batch,columns_to_modify=[],
       #X_sample = change_int_values(X_sample, c, 0, 1, noise_factor) * (current_batch - start_drift_at_batch))
     else:
       # Constant noise numerical
-      X_sample[c] = X_sample[c] + 1.5* X[c].std()
+      X_sample[c] = X_sample[c] + numeric_noise_factor* X[c].std()
       #For Increasing NOISE use:
       #X_sample[c] = X_sample[c] + 1.5* X[c].std() * noise_factor * (current_batch - start_drift_at_batch)
   return X_sample.copy()
