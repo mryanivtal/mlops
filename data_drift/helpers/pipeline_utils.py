@@ -2,11 +2,13 @@
 import os
 import sys 
 import json
+import random
 import numpy as np
 import pandas as pd
 from tqdm.notebook import tqdm
 from xgboost import XGBRegressor
 from matplotlib import pyplot as plt
+from scipy.signal import savgol_filter
 from matplotlib.pyplot import get_cmap
 from sklearn.model_selection import train_test_split
 
@@ -15,8 +17,8 @@ from sklearn.model_selection import train_test_split
 from utils import calc_perf_kpis
 from model_helper import XgbModel
 from helpers.data_helper import sample_from_data,change_int_values
-from ..drift_detection.drift_detector import DriftDetector
-from ..drift_detection.drift_testers.ks_drift_tester import KsDriftTester
+from drift_detector import DriftDetector
+from drift_testers.ks_drift_tester import KsDriftTester
 
 def load_configuration(config_file='config.json',verbose=False):
     '''
@@ -66,19 +68,88 @@ def init_result_dfs(X_test,y_test,model,drift_detector):
   return perf_kpis_base,perf_kpis_prod
 
 
-def add_artificial_noise_to_data(X_sample,current_batch,x_cat_features,columns_to_modify=[],start_drift_at_batch=100,noise_factor=0.01):
+def add_artificial_noise_to_data(X,X_sample,current_batch,columns_to_modify=[],
+                                 x_cat_features=[],start_drift_at_batch=100,noise_factor=0.01):
   '''
   Adds some noise to the data for simulating feature drift
   '''
   # modify data batch to create feature drift
   for c in columns_to_modify:
     if c in x_cat_features:
-      X_sample = change_int_values(X_sample, c, 0, 1, noise_factor * (current_batch - start_drift_at_batch))
+      # Constant noise categorical
+      X_sample = change_int_values(X_sample, c, 0, 1, noise_factor) 
+      #For Increasing NOISE use:
+      #X_sample = change_int_values(X_sample, c, 0, 1, noise_factor) * (current_batch - start_drift_at_batch))
     else:
-      X_sample[c] = X_sample[c] + 1.5* X[c].std()# * noise_factor * (current_batch - start_drift_at_batch)
+      # Constant noise numerical
+      X_sample[c] = X_sample[c] + 1.5* X[c].std()
+      #For Increasing NOISE use:
+      #X_sample[c] = X_sample[c] + 1.5* X[c].std() * noise_factor * (current_batch - start_drift_at_batch)
   return X_sample.copy()
 
+# ========================================================================== Plot
+def display_run(perf_kpis,drift_detector,simulated_drift_started_at_batch=100,axs=None,title='',
+                baseline_perf_kpis=None,smoothen=True,show_train=False):
+  '''
+  Plots the results of a demo run including 2 detected tests (first and second), noise and retraining markers
+  '''
+  def get_y_smoothen(y):
+    yhat = savgol_filter(y, 15, 3) # window size 51, polynomial order 3
+    return yhat
+
+  # plot RMSE (Loss function) line
+  if(smoothen):
+    axs.plot(get_y_smoothen(perf_kpis['RMSE']))
+  else:
+    axs.plot(perf_kpis['RMSE'])
+  
+  if baseline_perf_kpis is not None:
+    if(smoothen):
+      axs.plot(get_y_smoothen(baseline_perf_kpis['RMSE']))
+    else:
+      axs.plot(baseline_perf_kpis['RMSE'])
+
+
+  if(show_train):  
+    retrain_index = [r for r in perf_kpis[perf_kpis['retrain']==True].index]
+    for r in retrain_index:
+      # plot vertical line for each retraining
+      axs.axvline(x=r, label='retrain_'+str(r), color='black', linestyle='dashed')
+
+
+  # plot vertical line for data drift start point
+  first_drift = simulated_drift_started_at_batch
+  second_drift = 3*simulated_drift_started_at_batch
+  axs.axvline(x=first_drift, label='drift_start_'+str(first_drift), color='r', linestyle='dashed')
+  axs.axvline(x=second_drift, label='drift_start_'+str(second_drift), color='r', linestyle='dashed')
+
+  # Get drift detector x_history for plots
+  x_history = drift_detector.history_df
+
+  # plot vertical line for each tester that fired
+  fail_detections = []
+  cmap = get_cmap('hsv', 15)
+
+  for i, test_name in enumerate(drift_detector.get_test_names()):
+      if x_history[test_name].sum() > 0:
+          rand_small = random.uniform(-5, 1)
+          all_detections = np.where(x_history[test_name] == True)[0]
+          first_detection_time = all_detections.min()  #show first detection of demo
+          axs.axvline(x=first_detection_time+rand_small, label=test_name, color=cmap(i))
+          detection_time2 = all_detections.max()-5 #show detection towards the end of the demo
+          axs.axvline(x=detection_time2+rand_small, label=test_name+'2', color=cmap(i))
+
+  # Display plot
+  axs.legend()
+  axs.set_xlabel('batch number')
+  axs.set_ylabel('RMSE')
+  axs.set_title(title)
+
+
 def show_drift_detection_step(perf_kpis_base,perf_kpis_prod,title=''):
+  '''
+  A Step function plot of the status of the drift detectors, baseline vs. production
+  '''
   fig, axs = plt.subplots(2,1,figsize=(30, 5))
   base_y = perf_kpis_base['drift_detected']
   base_x = range(len(base_y))
@@ -95,22 +166,24 @@ def show_drift_detection_step(perf_kpis_base,perf_kpis_prod,title=''):
   axs[0].set_title('Baseline')
   axs[1].set_title('Production')
   plt.suptitle(title)
+  plt.tight_layout()
   plt.show()
 
-def report_summary_kpi(selected_dataset,perf_kpis_base,perf_kpis_prod,last_k_batches=100):
+def report_summary_kpi(perf_kpis_base,perf_kpis_prod,last_k_batches=50,selected_dataset='BOSTON'):
   '''
   Reports the summary KPI 
   '''
   mean_base = perf_kpis_base.iloc[-last_k_batches]['RMSE'].mean()
   mean_prod = perf_kpis_prod.iloc[-last_k_batches]['RMSE'].mean()
   diff_base_prod = mean_base-mean_prod
-  print('Average RMSE on last 100 batches: Baseline:{:.4f} vs. Production:{:.4f}'.format(mean_base,mean_prod))
+  print('Average RMSE on last {} batches: Baseline:{:.4f} vs. Production:{:.4f}'.format(last_k_batches,mean_base,mean_prod))
   if(selected_dataset=='BOSTON'):
     print('Production model is better by {:.4f} , a potential saving of {:.2f}$ for the house predictions company'.format(diff_base_prod,diff_base_prod*1000))
   else:
     print('Production model is better by {:.4f} , a potential saving of {:.2f} claims per customer'.format(diff_base_prod,diff_base_prod))
 
 
+# Build models on train data
 def train_fresh_models(selected_dataset,X_train,y_train):
   '''
   Fresh start for baseline and production models
