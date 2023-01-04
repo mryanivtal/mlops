@@ -2,10 +2,9 @@ from typing import List
 import pandas as pd
 from drift_detection.drift_testers.abstract_drift_tester import AbstractDriftTester
 from drift_detection.drift_testers.chi_drift_tester import ChiDriftTester
-from drift_detection.drift_test_set import DriftTestSet
+from drift_detection.drift_testers.drift_test_set import DriftTestSet
 from drift_detection.drift_testers.kl_drift_tester import KLDDriftTester
 from drift_detection.drift_testers.ks_drift_tester import KsDriftTester
-from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
 
 
 class DriftDetector:

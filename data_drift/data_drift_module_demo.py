@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from boston_ds import BostonDS
 from drift_detection.drift_testers.ks_drift_tester import KsDriftTester
+from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
 from helpers.data_helper import sample_from_data, change_int_values
 from helpers.model_helper import XgbModel
 from helpers.utils import calc_perf_kpis
@@ -51,11 +52,9 @@ kpi['test_exceptions'] = drift_test_results['test_exceptions']
 perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 
 # ============================================================= Runtime step
-
 number_of_batches = 300
 start_drift_at_batch = 100
 sample_size = 50
-
 
 # Runtime loop
 for i in range(number_of_batches):
