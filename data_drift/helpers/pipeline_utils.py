@@ -102,7 +102,7 @@ def add_artificial_noise_to_data(X,X_sample,current_batch,columns_to_modify=[],
 
 # ========================================================================== Plot
 def display_run(perf_kpis,drift_detector,simulated_drift_started_at_batch=100,axs=None,title='',
-                baseline_perf_kpis=None,smoothen=True,show_train=False):
+                baseline_perf_kpis=None,smoothen=True,show_train=False,show_first_only=False):
   '''
   Plots the results of a demo run including 2 detected tests (first and second), noise and retraining markers
   '''
@@ -149,8 +149,9 @@ def display_run(perf_kpis,drift_detector,simulated_drift_started_at_batch=100,ax
           all_detections = np.where(x_history[test_name] == True)[0]
           first_detection_time = all_detections.min()  #show first detection of demo
           axs.axvline(x=first_detection_time+rand_small, label=test_name, color=cmap(i))
-          detection_time2 = all_detections.max()-5 #show detection towards the end of the demo
-          axs.axvline(x=detection_time2+rand_small, label=test_name+'2', color=cmap(i))
+          if(not show_first_only):
+            detection_time2 = all_detections.max()-5 #show detection towards the end of the demo
+            axs.axvline(x=detection_time2+rand_small, label=test_name+'2', color=cmap(i))
 
   # Display plot
   axs.legend()
