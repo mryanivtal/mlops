@@ -25,7 +25,6 @@ def change_int_values(df: pd.DataFrame, feature_name, from_value, to_value, flip
     rows_with_from_values = df.index[df[feature_name] == from_value].tolist()
     amount_to_flip = int(np.floor(flip_rate * len(rows_with_from_values)))
 
-
     if rows_with_from_values == 0 or amount_to_flip == 0:
         return df
 

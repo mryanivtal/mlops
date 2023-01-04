@@ -1,11 +1,11 @@
 import json,os
 
 # data drift imports
-from data_helper import sample_from_data
-from drift_detection.drift_detector import DriftDetector
-from helpers.utils import calc_perf_kpis, recurring_val_in_lists
-from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
-from drift_detection.drift_testers.pca_ks_drift_tester import PcaKsDriftTester
+# from helpers.data_helper import sample_from_data
+# from drift_detection.drift_detector import DriftDetector
+# from helpers.utils import calc_perf_kpis, recurring_val_in_lists
+# from drift_detection.drift_testers.mmd_drift_tester import MMDDriftTester
+# from drift_detection.drift_testers.pca_ks_drift_tester import PcaKsDriftTester
 
 def load_configuration(config_file='config.json',verbose=False):
     '''

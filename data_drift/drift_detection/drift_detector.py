@@ -51,7 +51,7 @@ class DriftDetector:
         self.drift_test_set.add(test)
         self.test_consecutive_fails[test.test_name] = consecutive_fails
 
-    def fit(self, data: pd.DataFrame,reset_history=True):
+    def fit(self, data: pd.DataFrame, reset_history=True):
         if(reset_history):
           self._reset_history()
         self.drift_test_set.fit(data)
