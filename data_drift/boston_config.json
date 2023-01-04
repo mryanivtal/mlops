@@ -1,8 +1,9 @@
 {
 	"dataset_name": "Boston Housing",
 	"dataset_csv_path": "boston_housing.csv",
-	"cat_features": [],
-	"int_features": ["CHAS", "RAD", "TAX"],
+	"cat_features": ["CHAS"],
+	"int_features": ["RAD", "TAX"],
 	"cont_features": ["CRIM", "ZN", "INDUS", "NOX", "RM", "AGE", "DIS", "PTRATIO", "B", "LSTAT"],
 	"target_label": "PRICE"
 }
+
