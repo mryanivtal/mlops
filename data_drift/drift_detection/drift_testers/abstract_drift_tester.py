@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pandas as pd
 
 
@@ -6,9 +8,11 @@ class AbstractDriftTester:
         self.test_name = None
         self.is_fit = False
 
-    def test_drift(self, data: pd.DataFrame):
+    def test_drift(self, data: pd.DataFrame) -> Dict:
         raise NotImplementedError
 
     def fit(self, ref_data: pd.DataFrame):
         raise NotImplementedError
+
+
 

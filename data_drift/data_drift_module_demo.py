@@ -39,7 +39,7 @@ y_pred = model.predict(x_test)
 # Create Feature drift detector with all default testers
 drift_detector = DriftDetector()
 drift_detector.autoselect_testers(x_cont_features, x_int_features, x_cat_features)
-# drift_detector.add_tester(MMDDriftTester('mmd', cont_features, dist_threshold=-1), consecutive_fails=3)
+# drift_detector.add_tester(MMDDriftTester('mmd', x_cont_features, dist_threshold=-1), consecutive_fails=3)
 
 drift_detector.fit(x_train)
 

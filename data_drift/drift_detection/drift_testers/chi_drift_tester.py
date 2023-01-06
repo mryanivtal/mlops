@@ -18,7 +18,7 @@ class ChiDriftTester(AbstractDriftTester, ABC):
         self.ref_data = ref_data
         self.is_fit = True
 
-    def test_drift(self, x: np.array) -> Dict:
+    def test_drift(self, data: np.array) -> Dict:
         if not self.is_fit:
             raise Exception(f'Drift tester {self.test_name} was not fit')
 
@@ -26,7 +26,7 @@ class ChiDriftTester(AbstractDriftTester, ABC):
         results['test_name'] = self.test_name
 
         # Make sure both histograms have the same keys
-        x_hist = x[self.col_name].value_counts()
+        x_hist = data[self.col_name].value_counts()
         ref_hist = self.ref_data[self.col_name].value_counts()
         unique_keys = set(x_hist.index.to_list() + ref_hist.index.to_list())
 
