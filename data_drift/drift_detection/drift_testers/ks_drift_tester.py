@@ -25,4 +25,8 @@ class KsDriftTester(AbstractDriftTester, ABC):
         results['test_name'] = self.test_name
         results['data'] = stats.kstest(data[self.col_name], self.ref_data[self.col_name])
         results['drift_found'] = results['data'][1] < self.p_threshold
+        self.last_value = results['data'][1]
         return results
+
+    def get_threshold(self):
+        return self.p_threshold

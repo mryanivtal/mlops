@@ -53,6 +53,12 @@ kpi['test_exceptions'] = drift_test_results['test_exceptions']
 
 perf_kpis = pd.DataFrame(columns=kpi.keys()).append(kpi, ignore_index=True)
 
+# ===== Add control plots data collector
+control_data = {}
+for tester_name in drift_detector.drift_test_set.get_test_names():
+    df = pd.DataFrame(columns=['threshold', 'value'])
+    control_data[tester_name] = df
+
 # ============================================================= Runtime step
 number_of_batches = 300
 start_drift_at_batch = 100
@@ -72,16 +78,22 @@ for i in range(number_of_batches):
     # predict
     y_pred = model.predict(x_sample)
 
-    # calc RMSE (For demo only, cannot do in real runtime - no labels there
-    kpi_sample = calc_perf_kpis(x_sample, y_sample, y_pred)
-
     # Execute drift test
     drift_test_results = drift_detector.test_drift(x_sample)
 
+    # calc RMSE (For demo only, cannot do in real runtime - no labels there
+    kpi_sample = calc_perf_kpis(x_sample, y_sample, y_pred)
     kpi_sample['drift_detected'] = drift_test_results['drift_detected']
     kpi_sample['test_exceptions'] = drift_test_results['test_exceptions']
     perf_kpis = perf_kpis.append(kpi_sample, ignore_index=True)
 
+    # Get data for control charts
+    for tester in drift_detector.drift_test_set.drift_testers:
+        control_record = {
+            'threshold': tester.get_threshold(),
+            'value': tester.last_value}
+
+        control_data[tester.test_name] = control_data[tester.test_name].append(control_record, ignore_index=True)
 # ========================================================================== Plot
 
 fig, axs = plt.subplots(figsize=(12, 12))
@@ -107,5 +119,24 @@ for i, test_name in enumerate(drift_detector.get_test_names()):
 # Display plot
 axs.legend()
 plt.show()
-
 print('Perf KPIs:', perf_kpis)
+
+# ==============================================================Plot control
+plots_to_display = ['ks_CRIM', 'kl_div', 'ks_RM']
+n_testers = len(plots_to_display)
+fig, axs = plt.subplots(n_testers, figsize=(12, 2*n_testers))
+i = 0
+
+for item in control_data.items():
+    if item[0] in plots_to_display:
+        axs[i].plot(item[1].iloc[:, 0], color='b')
+        axs[i].plot(item[1].iloc[:, 1], color='r')
+        axs[i].set_title(item[0], loc='left')
+        i += 1
+
+plt.show()
+
+
+
+
+

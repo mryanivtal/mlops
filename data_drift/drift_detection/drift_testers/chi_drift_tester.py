@@ -38,7 +38,12 @@ class ChiDriftTester(AbstractDriftTester, ABC):
 
         results['data'] = chi2_contingency([x_hist, ref_hist])
         results['drift_found'] = results['data'][1] < self.p_threshold
+        self.last_value = results['data'][1]
+
         return results
+
+    def get_threshold(self):
+        return self.p_threshold
 
 
 

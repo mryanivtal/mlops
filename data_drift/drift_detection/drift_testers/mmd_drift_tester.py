@@ -45,6 +45,9 @@ class MMDDriftTester(AbstractDriftTester, ABC):
         results['data'] = self._mmd_pd(self.temp_data_storage[self.col_names], self.ref_data[self.col_names])
         results['drift_found'] = results['data'].item() > self.dist_threshold
 
+        self.last_value = results['data'].item()
+
+
         return results
 
     def _mmd(self, x, y, kernel='multiscale'):
@@ -93,7 +96,6 @@ class MMDDriftTester(AbstractDriftTester, ABC):
         t2 = torch.from_numpy(bnp)
         return self._mmd(t1, t2, kernel)
 
-
     def _tune_threshold(self, data: pd.DataFrame) -> float:
         if len(data) < 50:
             raise Exception('Data is too small for threshold auto-tune)')
@@ -119,3 +121,5 @@ class MMDDriftTester(AbstractDriftTester, ABC):
 
         return threshold
 
+    def get_threshold(self):
+        return self.dist_threshold

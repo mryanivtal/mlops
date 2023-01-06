@@ -45,8 +45,12 @@ class KLDDriftTester(AbstractDriftTester, ABC):
         results['test_name'] = self.test_name
         results['data'] = KLdivergence(self.temp_data_storage[self.col_names], self.ref_data[self.col_names])
         results['drift_found'] = results['data'] > self.dist_threshold
+        self.last_value = results['data']
 
         return results
+
+    def get_threshold(self):
+        return self.dist_threshold
 
 
     def _tune_threshold(self, data: pd.DataFrame, n_splits=5) -> float:

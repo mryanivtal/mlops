@@ -33,4 +33,10 @@ class PcaKsDriftTester(AbstractDriftTester, ABC):
         results['test_name'] = self.test_name
         results['data'] = stats.kstest(pca_x, self.ref_data_pca)
         results['drift_found'] = results['data'][1] < self.p_threshold
+
+        self.last_value = results['data'][1]
+
         return results
+
+    def get_threshold(self):
+        return self.p_threshold
