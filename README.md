@@ -80,6 +80,16 @@ The simplest running option is to upload the notebook to Google Colab and "run a
 See: [E2E notebook](data_drift/e2e_data_drift_pipeline_demo.ipynb)
 (Note: you may need to restart the Colab notebook after the `pip install...` part to enable some libraries to be reloaded)
 
+# Datasets
+We used 2 datasets to demonstrate the functionality:
+- [The Boston House Prices](https://www.kaggle.com/datasets/vikrishnan/boston-house-prices)
+- [The French Motor Claims](https://www.kaggle.com/datasets/floser/french-motor-claims-datasets-fremtpl2freq)
+
+See the [dataset schema PDF](data_drift/datasets_schema.pdf)
+
+Please note that any tabular numerical data can be used as well.
+
+
 
 
 
