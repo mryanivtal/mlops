@@ -2,7 +2,7 @@
 
 This repository contains an implementation of a data drift detector, which can be used as an automatic step in a production pipeline, in order to detect drifts in Tabular datasets.
 
-# Highlights:
+# Highlights
 - Automated statistical data drift detector module 
 - Works on any tabular numerical data (Floats / Int / Categorical)
 - Standard ML interface, easy to use (Create 🡪 fit 🡪 test)
